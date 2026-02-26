@@ -17,8 +17,9 @@ async function bootstrap() {
       exceptionFactory: (errors) => {
         const errorsMessages = errors
           .filter((e) => {
-            const msg = e.constraints ? Object.values(e.constraints)[0] : '';
-            return typeof msg === 'string' && !msg.includes('should not exist');
+            if (!e.constraints) return true;
+            const messages = Object.values(e.constraints);
+            return !messages.some((msg) => typeof msg === 'string' && msg.includes('should not exist'));
           })
           .map((e) => ({
             message: e.constraints ? Object.values(e.constraints)[0] : 'Validation failed',

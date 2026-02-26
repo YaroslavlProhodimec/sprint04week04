@@ -6,32 +6,34 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.TestingModule = void 0;
+exports.CommentsModule = void 0;
 const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
-const testing_controller_1 = require("./testing.controller");
-const blog_schema_1 = require("../schemas/blog.schema");
-const post_schema_1 = require("../schemas/post.schema");
-const user_schema_1 = require("../schemas/user.schema");
-const postLike_schema_1 = require("../schemas/postLike.schema");
+const comments_controller_1 = require("./comments.controller");
+const comments_service_1 = require("./comments.service");
+const comments_repository_1 = require("./comments.repository");
 const comment_schema_1 = require("../schemas/comment.schema");
 const commentLike_schema_1 = require("../schemas/commentLike.schema");
-let TestingModule = class TestingModule {
+const posts_module_1 = require("../posts/posts.module");
+const users_module_1 = require("../users/users.module");
+const auth_module_1 = require("../auth/auth.module");
+let CommentsModule = class CommentsModule {
 };
-exports.TestingModule = TestingModule;
-exports.TestingModule = TestingModule = __decorate([
+exports.CommentsModule = CommentsModule;
+exports.CommentsModule = CommentsModule = __decorate([
     (0, common_1.Module)({
         imports: [
             mongoose_1.MongooseModule.forFeature([
-                { name: blog_schema_1.Blog.name, schema: blog_schema_1.BlogSchema },
-                { name: post_schema_1.Post.name, schema: post_schema_1.PostSchema },
-                { name: user_schema_1.User.name, schema: user_schema_1.UserSchema },
-                { name: postLike_schema_1.PostLike.name, schema: postLike_schema_1.PostLikeSchema },
                 { name: comment_schema_1.Comment.name, schema: comment_schema_1.CommentSchema },
                 { name: commentLike_schema_1.CommentLike.name, schema: commentLike_schema_1.CommentLikeSchema },
             ]),
+            (0, common_1.forwardRef)(() => posts_module_1.PostsModule),
+            users_module_1.UsersModule,
+            auth_module_1.AuthModule,
         ],
-        controllers: [testing_controller_1.TestingController],
+        controllers: [comments_controller_1.CommentsController],
+        providers: [comments_service_1.CommentsService, comments_repository_1.CommentsRepository],
+        exports: [comments_service_1.CommentsService, comments_repository_1.CommentsRepository],
     })
-], TestingModule);
-//# sourceMappingURL=testing.module.js.map
+], CommentsModule);
+//# sourceMappingURL=comments.module.js.map

@@ -6,6 +6,8 @@ import { Blog, BlogDocument } from '../schemas/blog.schema';
 import { Post, PostDocument } from '../schemas/post.schema';
 import { User, UserDocument } from '../schemas/user.schema';
 import { PostLike, PostLikeDocument } from '../schemas/postLike.schema';
+import { Comment, CommentDocument } from '../schemas/comment.schema';
+import { CommentLike, CommentLikeDocument } from '../schemas/commentLike.schema';
 
 @Controller('testing')
 export class TestingController {
@@ -14,6 +16,8 @@ export class TestingController {
     @InjectModel(Post.name) private postModel: Model<PostDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     @InjectModel(PostLike.name) private postLikeModel: Model<PostLikeDocument>,
+    @InjectModel(Comment.name) private commentModel: Model<CommentDocument>,
+    @InjectModel(CommentLike.name) private commentLikeModel: Model<CommentLikeDocument>,
   ) {}
 
   @Delete('all-data')
@@ -24,6 +28,8 @@ export class TestingController {
       this.postModel.deleteMany({}),
       this.userModel.deleteMany({}),
       this.postLikeModel.deleteMany({}),
+      this.commentModel.deleteMany({}),
+      this.commentLikeModel.deleteMany({}),
     ]);
   }
 }

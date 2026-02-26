@@ -22,17 +22,12 @@ async function createApp() {
     new ValidationPipe({
       transform: true,
       whitelist: true,
-      forbidNonWhitelisted: false,
+      forbidNonWhitelisted: true,
       exceptionFactory: (errors) => {
-        const errorsMessages = errors
-          .filter((e) => {
-            const msg = e.constraints ? Object.values(e.constraints)[0] : '';
-            return typeof msg === 'string' && !msg.includes('should not exist');
-          })
-          .map((e) => ({
-            message: e.constraints ? Object.values(e.constraints)[0] : 'Validation failed',
-            field: e.property,
-          }));
+        const errorsMessages = errors.map((e) => ({
+          message: e.constraints ? Object.values(e.constraints)[0] : 'Validation failed',
+          field: e.property,
+        }));
         return new BadRequestException({ errorsMessages });
       },
     })

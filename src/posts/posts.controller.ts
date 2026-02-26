@@ -15,13 +15,14 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { CreatePostDto, UpdatePostDto } from '../types/post/input';
 import { OutputPostType } from '../types/post/output';
 import { PostsService } from './posts.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { BasicAuthGuard } from '../auth/guards/basic-auth.guard';
 import { OptionalJwtGuard } from '../auth/guards/optional-jwt.guard';
 import { UserId } from '../auth/decorators/user-id.decorator';
 import { LikeStatusDto } from '../dto/postsDTO/like-status.dto';
+import { CreatePostDto, UpdatePostDto } from '../dto/postsDTO/create-post.dto';
 
 @Controller('posts')
 export class PostsController {
@@ -71,43 +72,33 @@ export class PostsController {
 
   // POST /posts - создать новый пост
   @Post()
+  @UseGuards(BasicAuthGuard)
   @HttpCode(HttpStatus.CREATED)
   async createPost(@Body() createPostDto: CreatePostDto): Promise<OutputPostType> {
-    try {
-      const newPost = await this.postsService.createPost(createPostDto);
-      return newPost;
-    } catch (error) {
-      throw new BadRequestException(error.message || 'Failed to create post');
-    }
+    const newPost = await this.postsService.createPost(createPostDto);
+    return newPost;
   }
 
   // PUT /posts/:id - обновить пост
   @Put(':id')
+  @UseGuards(BasicAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async updatePost(
     @Param('id') id: string,
     @Body() updatePostDto: UpdatePostDto,
   ): Promise<void> {
-    try {
-      const updated = await this.postsService.updatePost(id, updatePostDto);
-
-      if (!updated) {
-        throw new NotFoundException(`Post with ID ${id} not found`);
-      }
-    } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw error;
-      }
-      throw new BadRequestException(error.message || 'Failed to update post');
+    const updated = await this.postsService.updatePost(id, updatePostDto);
+    if (!updated) {
+      throw new NotFoundException(`Post with ID ${id} not found`);
     }
   }
 
   // DELETE /posts/:id - удалить пост
   @Delete(':id')
+  @UseGuards(BasicAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async deletePost(@Param('id') id: string): Promise<void> {
     const deleted = await this.postsService.deletePost(id);
-
     if (!deleted) {
       throw new NotFoundException(`Post with ID ${id} not found`);
     }

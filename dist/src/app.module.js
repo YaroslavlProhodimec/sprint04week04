@@ -17,6 +17,7 @@ const blogs_module_1 = require("./blogs/blogs.module");
 const users_module_1 = require("./users/users.module");
 const auth_module_1 = require("./auth/auth.module");
 const posts_module_1 = require("./posts/posts.module");
+const comments_module_1 = require("./comments/comments.module");
 const testing_module_1 = require("./testing/testing.module");
 const blog_repository_1 = require("./repositories/blog-repository");
 const blogs_repository_1 = require("./blogs/blogs.repository");
@@ -43,6 +44,7 @@ exports.AppModule = AppModule = __decorate([
             users_module_1.UsersModule,
             auth_module_1.AuthModule,
             posts_module_1.PostsModule,
+            comments_module_1.CommentsModule,
             testing_module_1.TestingModule,
         ],
     }),

@@ -1,11 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.commentsMapper = void 0;
-const commentsMapper = (comment, myStatus = "None", likesCount = 0, dislikesCount = 0) => {
-    console.log(comment._id, 'comment._id');
-    console.log(comment.id, 'comment.id');
+const commentsMapper = (comment, myStatus = 'None', likesCount = 0, dislikesCount = 0) => {
     return {
-        id: comment._id ? comment._id.toString() : comment.id?.toString(),
+        id: comment.id ?? comment._id?.toString(),
         content: comment.content,
         commentatorInfo: {
             userId: comment.commentatorInfo.userId,
@@ -15,8 +13,8 @@ const commentsMapper = (comment, myStatus = "None", likesCount = 0, dislikesCoun
         likesInfo: {
             likesCount,
             dislikesCount,
-            myStatus
-        }
+            myStatus,
+        },
     };
 };
 exports.commentsMapper = commentsMapper;

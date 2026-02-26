@@ -8,19 +8,23 @@ async function bootstrap() {
     app.useGlobalPipes(new common_1.ValidationPipe({
         transform: true,
         whitelist: true,
-        forbidNonWhitelisted: false,
+        forbidNonWhitelisted: true,
         exceptionFactory: (errors) => {
-            const errorsMessages = errors
-                .filter((e) => {
+            const errorsMessages = [];
+            for (const e of errors) {
                 if (!e.constraints)
-                    return true;
-                const messages = Object.values(e.constraints);
-                return !messages.some((msg) => typeof msg === 'string' && msg.includes('should not exist'));
-            })
-                .map((e) => ({
-                message: e.constraints ? Object.values(e.constraints)[0] : 'Validation failed',
-                field: e.property,
-            }));
+                    continue;
+                const constraintKeys = Object.keys(e.constraints);
+                const constraintValues = Object.values(e.constraints);
+                const isWhitelistError = constraintKeys.includes('whitelistValidation') ||
+                    constraintValues.some((msg) => typeof msg === 'string' && msg.includes('should not exist'));
+                if (isWhitelistError)
+                    continue;
+                errorsMessages.push({
+                    message: constraintValues[0],
+                    field: e.property,
+                });
+            }
             return new common_1.BadRequestException({ errorsMessages });
         },
     }));

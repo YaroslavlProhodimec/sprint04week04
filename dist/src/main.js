@@ -10,7 +10,12 @@ async function bootstrap() {
         whitelist: true,
         forbidNonWhitelisted: false,
         exceptionFactory: (errors) => {
-            const errorsMessages = errors.map((e) => ({
+            const errorsMessages = errors
+                .filter((e) => {
+                const msg = e.constraints ? Object.values(e.constraints)[0] : '';
+                return typeof msg === 'string' && !msg.includes('should not exist');
+            })
+                .map((e) => ({
                 message: e.constraints ? Object.values(e.constraints)[0] : 'Validation failed',
                 field: e.property,
             }));

@@ -81,18 +81,18 @@ export class AuthService {
     await this.emailService.sendConfirmationEmail(user.accountData.email, newCode);
   }
 
-  async login(loginOrEmail: string, password: string): Promise<{ accessToken: string }> {
+  async login(loginOrEmail: string, password: string): Promise<{ accessToken: string; refreshToken: string }> {
     const user = await this.usersService.checkCredentials(loginOrEmail, password);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
-    const secret = process.env.ACCESS_TOKEN_SECRET || 'access-secret';
-    const accessToken = await jwtService.createJWT(
-      { userId: toUserId(user) },
-      secret,
-      300, // 5 минут в секундах
-    );
-    return { accessToken };
+    const accessSecret = process.env.ACCESS_TOKEN_SECRET || 'access-secret';
+    const refreshSecret = process.env.REFRESH_TOKEN_SECRET || 'refresh-secret';
+    const [accessToken, refreshToken] = await Promise.all([
+      jwtService.createJWT({ userId: toUserId(user) }, accessSecret, 300), // 5 мин
+      jwtService.createJWT({ userId: toUserId(user) }, refreshSecret, 604800), // 7 дней
+    ]);
+    return { accessToken, refreshToken };
   }
 
   async getMe(userId: string) {

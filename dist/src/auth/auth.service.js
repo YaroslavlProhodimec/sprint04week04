@@ -87,9 +87,13 @@ let AuthService = class AuthService {
         if (!user) {
             throw new common_1.UnauthorizedException('Invalid credentials');
         }
-        const secret = process.env.ACCESS_TOKEN_SECRET || 'access-secret';
-        const accessToken = await jwt_service_1.jwtService.createJWT({ userId: toUserId(user) }, secret, 300);
-        return { accessToken };
+        const accessSecret = process.env.ACCESS_TOKEN_SECRET || 'access-secret';
+        const refreshSecret = process.env.REFRESH_TOKEN_SECRET || 'refresh-secret';
+        const [accessToken, refreshToken] = await Promise.all([
+            jwt_service_1.jwtService.createJWT({ userId: toUserId(user) }, accessSecret, 300),
+            jwt_service_1.jwtService.createJWT({ userId: toUserId(user) }, refreshSecret, 604800),
+        ]);
+        return { accessToken, refreshToken };
     }
     async getMe(userId) {
         const user = await this.usersService.findById(userId);

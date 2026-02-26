@@ -38,8 +38,8 @@ let AuthController = class AuthController {
         await this.authService.resendEmail(dto.email);
     }
     async login(dto, res) {
-        const { accessToken } = await this.authService.login(dto.loginOrEmail, dto.password);
-        res.cookie('refreshToken', 'refresh-token-stub', {
+        const { accessToken, refreshToken } = await this.authService.login(dto.loginOrEmail, dto.password);
+        res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
             secure: true,
             sameSite: 'none',

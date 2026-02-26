@@ -9,6 +9,7 @@ export declare class AuthService {
     resendEmail(email: string): Promise<void>;
     login(loginOrEmail: string, password: string): Promise<{
         accessToken: string;
+        refreshToken: string;
     }>;
     getMe(userId: string): Promise<{
         email: string;

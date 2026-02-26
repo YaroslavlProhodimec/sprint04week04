@@ -15,6 +15,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.BlogsController = void 0;
 const common_1 = require("@nestjs/common");
 const blog_service_1 = require("./blog.service");
+const create_blog_dto_1 = require("../dto/blogsDTO/create-blog.dto");
+const create_post_for_blog_dto_1 = require("../dto/postsDTO/create-post-for-blog.dto");
+const basic_auth_guard_1 = require("../auth/guards/basic-auth.guard");
+const optional_jwt_guard_1 = require("../auth/guards/optional-jwt.guard");
 let BlogsController = class BlogsController {
     blogsService;
     constructor(blogsService) {
@@ -37,13 +41,7 @@ let BlogsController = class BlogsController {
         return blog;
     }
     async createBlog(createBlogDto) {
-        try {
-            const newBlog = await this.blogsService.createBlog(createBlogDto);
-            return newBlog;
-        }
-        catch (error) {
-            throw new common_1.BadRequestException('Failed to create blog');
-        }
+        return this.blogsService.createBlog(createBlogDto);
     }
     async updateBlog(id, updateBlogDto) {
         const updated = await this.blogsService.updateBlog(id, updateBlogDto);
@@ -64,7 +62,7 @@ let BlogsController = class BlogsController {
             pageNumber: query.pageNumber,
             pageSize: query.pageSize,
         };
-        const userId = req.userId ?? undefined;
+        const userId = req.user?.userId;
         const posts = await this.blogsService.getPostsByBlogId(id, sortData, userId);
         if (!posts || posts.items.length < 1) {
             throw new common_1.NotFoundException('Posts not found');
@@ -97,23 +95,26 @@ __decorate([
 ], BlogsController.prototype, "getBlog", null);
 __decorate([
     (0, common_1.Post)(),
+    (0, common_1.UseGuards)(basic_auth_guard_1.BasicAuthGuard),
     (0, common_1.HttpCode)(common_1.HttpStatus.CREATED),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [create_blog_dto_1.CreateBlogDto]),
     __metadata("design:returntype", Promise)
 ], BlogsController.prototype, "createBlog", null);
 __decorate([
     (0, common_1.Put)(':id'),
+    (0, common_1.UseGuards)(basic_auth_guard_1.BasicAuthGuard),
     (0, common_1.HttpCode)(common_1.HttpStatus.NO_CONTENT),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:paramtypes", [String, create_blog_dto_1.UpdateBlogDto]),
     __metadata("design:returntype", Promise)
 ], BlogsController.prototype, "updateBlog", null);
 __decorate([
     (0, common_1.Delete)(':id'),
+    (0, common_1.UseGuards)(basic_auth_guard_1.BasicAuthGuard),
     (0, common_1.HttpCode)(common_1.HttpStatus.NO_CONTENT),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
@@ -122,6 +123,7 @@ __decorate([
 ], BlogsController.prototype, "deleteBlog", null);
 __decorate([
     (0, common_1.Get)(':id/posts'),
+    (0, common_1.UseGuards)(optional_jwt_guard_1.OptionalJwtGuard),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Query)()),
     __param(2, (0, common_1.Req)()),
@@ -131,11 +133,12 @@ __decorate([
 ], BlogsController.prototype, "getBlogPosts", null);
 __decorate([
     (0, common_1.Post)(':id/posts'),
+    (0, common_1.UseGuards)(basic_auth_guard_1.BasicAuthGuard),
     (0, common_1.HttpCode)(common_1.HttpStatus.CREATED),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:paramtypes", [String, create_post_for_blog_dto_1.CreatePostForBlogDto]),
     __metadata("design:returntype", Promise)
 ], BlogsController.prototype, "createPostForBlog", null);
 exports.BlogsController = BlogsController = __decorate([

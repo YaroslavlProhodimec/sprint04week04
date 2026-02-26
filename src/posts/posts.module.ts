@@ -9,6 +9,7 @@ import { PostsController } from './posts.controller';
 import { PostsService } from './posts.service';
 import { BlogsModule } from '../blogs/blogs.module';
 import { UsersModule } from '../users/users.module';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { UsersModule } from '../users/users.module';
     ]),
     forwardRef(() => BlogsModule),
     UsersModule,
+    AuthModule,
   ],
   controllers: [PostsController],
   providers: [PostsService, PostsRepository, PostLikesRepository],

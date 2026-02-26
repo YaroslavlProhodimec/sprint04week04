@@ -37,8 +37,14 @@ let AuthController = class AuthController {
     async resendEmail(dto) {
         await this.authService.resendEmail(dto.email);
     }
-    async login(dto) {
-        return this.authService.login(dto.loginOrEmail, dto.password);
+    async login(dto, res) {
+        const { accessToken } = await this.authService.login(dto.loginOrEmail, dto.password);
+        res.cookie('refreshToken', 'refresh-token-stub', {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'none',
+        });
+        return { accessToken };
     }
     async me(userId) {
         const me = await this.authService.getMe(userId);
@@ -80,9 +86,11 @@ __decorate([
 ], AuthController.prototype, "resendEmail", null);
 __decorate([
     (0, common_1.Post)('login'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Res)({ passthrough: true })),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [login_dto_1.LoginDto]),
+    __metadata("design:paramtypes", [login_dto_1.LoginDto, Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "login", null);
 __decorate([

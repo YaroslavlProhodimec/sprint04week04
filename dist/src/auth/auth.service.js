@@ -32,9 +32,12 @@ let AuthService = class AuthService {
             this.usersService.findByLogin(login),
         ]);
         if (existingByLogin || existingByEmail) {
-            throw new common_1.BadRequestException({
-                errorsMessages: [{ message: 'User with this login or email already exists', field: 'login' }],
-            });
+            const errorsMessages = [];
+            if (existingByLogin)
+                errorsMessages.push({ message: 'User with this login already exists', field: 'login' });
+            if (existingByEmail)
+                errorsMessages.push({ message: 'User with this email already exists', field: 'email' });
+            throw new common_1.BadRequestException({ errorsMessages });
         }
         const confirmationCode = (0, uuid_1.v4)();
         const expirationDate = (0, date_fns_1.add)(new Date(), { hours: 3, minutes: 3 });
@@ -44,6 +47,7 @@ let AuthService = class AuthService {
         }
         catch (e) {
             await this.usersService.deleteById(toUserId(created));
+            2;
             throw new common_1.BadRequestException({ errorsMessages: [{ message: 'Registration failed', field: 'email' }] });
         }
     }

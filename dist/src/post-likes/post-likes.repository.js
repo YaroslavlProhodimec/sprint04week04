@@ -48,6 +48,9 @@ let PostLikesRepository = class PostLikesRepository {
     async setLike(postId, userId, likeStatus) {
         await this.postLikeModel.updateOne({ postId, userId }, { $set: { postId, userId, likeStatus, addedAt: new Date() } }, { upsert: true }).exec();
     }
+    async removeLike(postId, userId) {
+        await this.postLikeModel.deleteOne({ postId, userId }).exec();
+    }
 };
 exports.PostLikesRepository = PostLikesRepository;
 exports.PostLikesRepository = PostLikesRepository = __decorate([

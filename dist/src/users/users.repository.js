@@ -122,7 +122,12 @@ let UsersRepository = class UsersRepository {
                 passwordSalt,
                 createdAt: new Date()
             },
-            isConfirmed: false
+            emailConfirmation: {
+                confirmationCode: null,
+                isConfirmed: true,
+                expirationDate: null,
+            },
+            isConfirmed: true,
         };
         const newUser = new this.userModel(userData);
         await newUser.save();

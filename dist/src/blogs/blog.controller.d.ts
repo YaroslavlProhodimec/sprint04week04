@@ -1,6 +1,8 @@
-import { CreateBlogDto, UpdateBlogDto, SortDataType } from '../types/blog/input';
+import { SortDataType } from '../types/blog/input';
 import { BlogType } from '../types/blog/output';
 import { BlogsService } from './blog.service';
+import { CreateBlogDto, UpdateBlogDto } from '../dto/blogsDTO/create-blog.dto';
+import { CreatePostForBlogDto } from '../dto/postsDTO/create-post-for-blog.dto';
 export declare class BlogsController {
     private readonly blogsService;
     constructor(blogsService: BlogsService);
@@ -16,7 +18,9 @@ export declare class BlogsController {
     updateBlog(id: string, updateBlogDto: UpdateBlogDto): Promise<void>;
     deleteBlog(id: string): Promise<void>;
     getBlogPosts(id: string, query: any, req: {
-        userId?: string | null;
+        user?: {
+            userId: string;
+        };
     }): Promise<{
         pagesCount: number;
         page: number;
@@ -42,5 +46,5 @@ export declare class BlogsController {
             };
         }[];
     }>;
-    createPostForBlog(blogId: string, postData: any): Promise<import("../types/post/output").OutputPostType>;
+    createPostForBlog(blogId: string, postData: CreatePostForBlogDto): Promise<import("../types/post/output").OutputPostType>;
 }

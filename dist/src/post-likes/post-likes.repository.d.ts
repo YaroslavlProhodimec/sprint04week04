@@ -10,4 +10,5 @@ export declare class PostLikesRepository {
         addedAt: Date;
     }>>;
     setLike(postId: string, userId: string, likeStatus: 'Like' | 'Dislike'): Promise<void>;
+    removeLike(postId: string, userId: string): Promise<void>;
 }

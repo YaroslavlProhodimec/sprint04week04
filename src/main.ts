@@ -13,7 +13,7 @@ async function bootstrap() {
     new ValidationPipe({
       transform: true,
       whitelist: true,
-      forbidNonWhitelisted: true,
+      forbidNonWhitelisted: false,
       exceptionFactory: (errors) => {
         const errorsMessages = errors.map((e) => ({
           message: e.constraints ? Object.values(e.constraints)[0] : 'Validation failed',

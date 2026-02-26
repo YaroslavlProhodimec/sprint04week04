@@ -1,9 +1,11 @@
 import { PostsRepository } from './posts.repository';
+import { PostLikesRepository } from '../post-likes/post-likes.repository';
 import { CreatePostDto, UpdatePostDto } from '../types/post/input';
 import { OutputPostType } from '../types/post/output';
 export declare class PostsService {
     private readonly postsRepository;
-    constructor(postsRepository: PostsRepository);
+    private readonly postLikesRepository;
+    constructor(postsRepository: PostsRepository, postLikesRepository: PostLikesRepository);
     getAllPosts(query: any, userId?: string): Promise<{
         pagesCount: number;
         page: number;
@@ -59,4 +61,5 @@ export declare class PostsService {
         }[];
     }>;
     createPostForBlog(blogId: string, postData: CreatePostDto): Promise<OutputPostType>;
+    setPostLikeStatus(postId: string, userId: string, likeStatus: 'Like' | 'Dislike' | 'None'): Promise<void>;
 }

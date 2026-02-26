@@ -17,6 +17,7 @@ const posts_controller_1 = require("./posts.controller");
 const posts_service_1 = require("./posts.service");
 const blogs_module_1 = require("../blogs/blogs.module");
 const users_module_1 = require("../users/users.module");
+const auth_module_1 = require("../auth/auth.module");
 let PostsModule = class PostsModule {
 };
 exports.PostsModule = PostsModule;
@@ -29,6 +30,7 @@ exports.PostsModule = PostsModule = __decorate([
             ]),
             (0, common_1.forwardRef)(() => blogs_module_1.BlogsModule),
             users_module_1.UsersModule,
+            auth_module_1.AuthModule,
         ],
         controllers: [posts_controller_1.PostsController],
         providers: [posts_service_1.PostsService, posts_repository_1.PostsRepository, post_likes_repository_1.PostLikesRepository],

@@ -15,26 +15,35 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PostsController = void 0;
 const common_1 = require("@nestjs/common");
 const posts_service_1 = require("./posts.service");
+const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
+const optional_jwt_guard_1 = require("../auth/guards/optional-jwt.guard");
+const user_id_decorator_1 = require("../auth/decorators/user-id.decorator");
+const like_status_dto_1 = require("../dto/postsDTO/like-status.dto");
 let PostsController = class PostsController {
     postsService;
     constructor(postsService) {
         this.postsService = postsService;
     }
-    async getPosts(query) {
+    async getPosts(query, req) {
         try {
-            const posts = await this.postsService.getAllPosts(query);
+            const userId = req.user?.userId;
+            const posts = await this.postsService.getAllPosts(query, userId);
             return posts;
         }
         catch (error) {
             throw new common_1.BadRequestException('Failed to get posts');
         }
     }
-    async getPost(id) {
-        const post = await this.postsService.getPostById(id);
+    async getPost(id, req) {
+        const userId = req.user?.userId;
+        const post = await this.postsService.getPostById(id, userId);
         if (!post) {
             throw new common_1.NotFoundException(`Post with ID ${id} not found`);
         }
         return post;
+    }
+    async setPostLikeStatus(postId, dto, userId) {
+        await this.postsService.setPostLikeStatus(postId, userId, dto.likeStatus);
     }
     async createPost(createPostDto) {
         try {
@@ -69,18 +78,33 @@ let PostsController = class PostsController {
 exports.PostsController = PostsController;
 __decorate([
     (0, common_1.Get)(),
+    (0, common_1.UseGuards)(optional_jwt_guard_1.OptionalJwtGuard),
     __param(0, (0, common_1.Query)()),
+    __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], PostsController.prototype, "getPosts", null);
 __decorate([
     (0, common_1.Get)(':id'),
+    (0, common_1.UseGuards)(optional_jwt_guard_1.OptionalJwtGuard),
     __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], PostsController.prototype, "getPost", null);
+__decorate([
+    (0, common_1.Put)(':postId/like-status'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.HttpCode)(common_1.HttpStatus.NO_CONTENT),
+    __param(0, (0, common_1.Param)('postId')),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, user_id_decorator_1.UserId)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, like_status_dto_1.LikeStatusDto, String]),
+    __metadata("design:returntype", Promise)
+], PostsController.prototype, "setPostLikeStatus", null);
 __decorate([
     (0, common_1.Post)(),
     (0, common_1.HttpCode)(common_1.HttpStatus.CREATED),

@@ -14,6 +14,7 @@ const blog_schema_1 = require("../schemas/blog.schema");
 const blog_controller_1 = require("./blog.controller");
 const blog_service_1 = require("./blog.service");
 const posts_module_1 = require("../posts/posts.module");
+const auth_module_1 = require("../auth/auth.module");
 let BlogsModule = class BlogsModule {
 };
 exports.BlogsModule = BlogsModule;
@@ -24,6 +25,7 @@ exports.BlogsModule = BlogsModule = __decorate([
                 { name: blog_schema_1.Blog.name, schema: blog_schema_1.BlogSchema }
             ]),
             (0, common_1.forwardRef)(() => posts_module_1.PostsModule),
+            auth_module_1.AuthModule,
         ],
         controllers: [blog_controller_1.BlogsController],
         providers: [blog_service_1.BlogsService, blogs_repository_1.BlogsRepository],

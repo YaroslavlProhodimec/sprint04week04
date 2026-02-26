@@ -51,4 +51,8 @@ export class PostLikesRepository {
       { upsert: true },
     ).exec();
   }
+
+  async removeLike(postId: string, userId: string): Promise<void> {
+    await this.postLikeModel.deleteOne({ postId, userId }).exec();
+  }
 }

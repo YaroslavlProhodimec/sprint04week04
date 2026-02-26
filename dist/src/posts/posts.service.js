@@ -12,10 +12,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PostsService = void 0;
 const common_1 = require("@nestjs/common");
 const posts_repository_1 = require("./posts.repository");
+const post_likes_repository_1 = require("../post-likes/post-likes.repository");
 let PostsService = class PostsService {
     postsRepository;
-    constructor(postsRepository) {
+    postLikesRepository;
+    constructor(postsRepository, postLikesRepository) {
         this.postsRepository = postsRepository;
+        this.postLikesRepository = postLikesRepository;
     }
     async getAllPosts(query, userId) {
         return this.postsRepository.getPosts(query, userId);
@@ -38,10 +41,23 @@ let PostsService = class PostsService {
     async createPostForBlog(blogId, postData) {
         return this.postsRepository.createPostForBlog(blogId, postData);
     }
+    async setPostLikeStatus(postId, userId, likeStatus) {
+        const post = await this.postsRepository.getPostById(postId);
+        if (!post) {
+            throw new common_1.NotFoundException();
+        }
+        if (likeStatus === 'None') {
+            await this.postLikesRepository.removeLike(postId, userId);
+        }
+        else {
+            await this.postLikesRepository.setLike(postId, userId, likeStatus);
+        }
+    }
 };
 exports.PostsService = PostsService;
 exports.PostsService = PostsService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [posts_repository_1.PostsRepository])
+    __metadata("design:paramtypes", [posts_repository_1.PostsRepository,
+        post_likes_repository_1.PostLikesRepository])
 ], PostsService);
 //# sourceMappingURL=posts.service.js.map

@@ -6,13 +6,15 @@ import { Blog, BlogSchema } from '../schemas/blog.schema';
 import { BlogsController } from './blog.controller';
 import { BlogsService } from './blog.service';
 import { PostsModule } from '../posts/posts.module';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Blog.name, schema: BlogSchema }
     ]),
-    forwardRef(() => PostsModule), // Используем forwardRef для избежания циклической зависимости
+    forwardRef(() => PostsModule),
+    AuthModule,
   ],
   controllers: [BlogsController],
   providers: [BlogsService, BlogsRepository],

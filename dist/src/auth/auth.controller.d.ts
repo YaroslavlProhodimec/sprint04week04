@@ -1,3 +1,4 @@
+import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -11,7 +12,7 @@ export declare class AuthController {
     register(dto: RegisterDto): Promise<void>;
     confirmCode(dto: ConfirmCodeDto): Promise<void>;
     resendEmail(dto: ResendEmailDto): Promise<void>;
-    login(dto: LoginDto): Promise<{
+    login(dto: LoginDto, res: Response): Promise<{
         accessToken: string;
     }>;
     me(userId: string): Promise<{

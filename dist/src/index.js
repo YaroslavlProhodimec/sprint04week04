@@ -24,21 +24,10 @@ async function createApp() {
             whitelist: true,
             forbidNonWhitelisted: true,
             exceptionFactory: (errors) => {
-                const errorsMessages = [];
-                for (const e of errors) {
-                    if (!e.constraints)
-                        continue;
-                    const constraintKeys = Object.keys(e.constraints);
-                    const constraintValues = Object.values(e.constraints);
-                    const isWhitelistError = constraintKeys.includes('whitelistValidation') ||
-                        constraintValues.some((msg) => typeof msg === 'string' && msg.includes('should not exist'));
-                    if (isWhitelistError)
-                        continue;
-                    errorsMessages.push({
-                        message: constraintValues[0],
-                        field: e.property,
-                    });
-                }
+                const errorsMessages = errors.map((e) => ({
+                    message: e.constraints ? Object.values(e.constraints)[0] : 'Validation failed',
+                    field: e.property,
+                }));
                 return new common_1.BadRequestException({ errorsMessages });
             },
         }));

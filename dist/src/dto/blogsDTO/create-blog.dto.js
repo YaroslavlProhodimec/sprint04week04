@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UpdateBlogDto = exports.CreateBlogDto = void 0;
 const class_validator_1 = require("class-validator");
+const class_transformer_1 = require("class-transformer");
 const websiteUrlRegex = /^https:\/\/([a-zA-Z0-9_-]+\.)+[a-zA-Z0-9_-]+(\/[a-zA-Z0-9_-]+)*\/?$/;
 class CreateBlogDto {
     name;
@@ -20,16 +21,19 @@ class CreateBlogDto {
 exports.CreateBlogDto = CreateBlogDto;
 __decorate([
     (0, class_validator_1.IsString)(),
+    (0, class_transformer_1.Transform)(({ value }) => (typeof value === 'string' ? value.trim() : value)),
     (0, class_validator_1.Length)(1, 15, { message: 'Incorrect name' }),
     __metadata("design:type", String)
 ], CreateBlogDto.prototype, "name", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
+    (0, class_transformer_1.Transform)(({ value }) => (typeof value === 'string' ? value.trim() : value)),
     (0, class_validator_1.Length)(1, 500, { message: 'Incorrect description' }),
     __metadata("design:type", String)
 ], CreateBlogDto.prototype, "description", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
+    (0, class_transformer_1.Transform)(({ value }) => (typeof value === 'string' ? value.trim() : value)),
     (0, class_validator_1.Length)(1, 100, { message: 'Incorrect websiteUrl' }),
     (0, class_validator_1.Matches)(websiteUrlRegex, { message: 'Incorrect websiteUrl' }),
     __metadata("design:type", String)
@@ -42,16 +46,19 @@ class UpdateBlogDto {
 exports.UpdateBlogDto = UpdateBlogDto;
 __decorate([
     (0, class_validator_1.IsString)(),
+    (0, class_transformer_1.Transform)(({ value }) => (typeof value === 'string' ? value.trim() : value)),
     (0, class_validator_1.Length)(1, 15, { message: 'Incorrect name' }),
     __metadata("design:type", String)
 ], UpdateBlogDto.prototype, "name", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
+    (0, class_transformer_1.Transform)(({ value }) => (typeof value === 'string' ? value.trim() : value)),
     (0, class_validator_1.Length)(1, 500, { message: 'Incorrect description' }),
     __metadata("design:type", String)
 ], UpdateBlogDto.prototype, "description", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
+    (0, class_transformer_1.Transform)(({ value }) => (typeof value === 'string' ? value.trim() : value)),
     (0, class_validator_1.Length)(1, 100, { message: 'Incorrect websiteUrl' }),
     (0, class_validator_1.Matches)(websiteUrlRegex, { message: 'Incorrect websiteUrl' }),
     __metadata("design:type", String)

@@ -1,7 +1,7 @@
+import { CreatePostDto, UpdatePostDto } from '../types/post/input';
 import { OutputPostType } from '../types/post/output';
 import { PostsService } from './posts.service';
 import { LikeStatusDto } from '../dto/postsDTO/like-status.dto';
-import { CreatePostDto, UpdatePostDto } from '../dto/postsDTO/create-post.dto';
 export declare class PostsController {
     private readonly postsService;
     constructor(postsService: PostsService);

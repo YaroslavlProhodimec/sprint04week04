@@ -1,8 +1,3 @@
-import { ValidatorConstraintInterface, ValidationArguments } from 'class-validator';
-export declare class IsTrimmedNotEmpty implements ValidatorConstraintInterface {
-    validate(value: any): boolean;
-    defaultMessage(args: ValidationArguments): string;
-}
 export declare class CreatePostForBlogDto {
     title: string;
     shortDescription: string;

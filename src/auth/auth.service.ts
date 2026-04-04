@@ -1,10 +1,26 @@
 import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { jwtService } from '../application/jwt-service';
 import { add } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 import { EmailService } from '../common/email/email.service';
-import { UsersService } from '../users/users.service';
 import type { UserDocument } from '../schemas/user.schema';
+import {
+  CreateUserForRegistrationCommand,
+  DeleteUserCommand,
+  ConfirmUserCommand,
+  UpdateConfirmationCodeCommand,
+  SetRecoveryCodeCommand,
+  SetNewPasswordCommand,
+} from '../users/commands';
+import {
+  FindUserByEmailQuery,
+  FindUserByLoginQuery,
+  FindUserByIdQuery,
+  FindUserByConfirmationCodeQuery,
+  FindUserByRecoveryCodeQuery,
+  CheckCredentialsQuery,
+} from '../users/queries';
 
 function toUserId(user: UserDocument): string {
   return String((user as any)._id);
@@ -13,14 +29,15 @@ function toUserId(user: UserDocument): string {
 @Injectable()
 export class AuthService {
   constructor(
-    private usersService: UsersService,
+    private commandBus: CommandBus,
+    private queryBus: QueryBus,
     private emailService: EmailService,
   ) {}
 
   async register(login: string, email: string, password: string) {
     const [existingByEmail, existingByLogin] = await Promise.all([
-      this.usersService.findByEmail(email),
-      this.usersService.findByLogin(login),
+      this.queryBus.execute(new FindUserByEmailQuery(email)),
+      this.queryBus.execute(new FindUserByLoginQuery(login)),
     ]);
     if (existingByLogin || existingByEmail) {
       const errorsMessages: { message: string; field: string }[] = [];
@@ -32,24 +49,22 @@ export class AuthService {
     const confirmationCode = uuidv4();
     const expirationDate = add(new Date(), { hours: 3, minutes: 3 });
 
-    const created = await this.usersService.createForRegistration(
-      login,
-      email,
-      password,
-      confirmationCode,
-      expirationDate,
+    const created: UserDocument = await this.commandBus.execute(
+      new CreateUserForRegistrationCommand(login, email, password, confirmationCode, expirationDate),
     );
 
     try {
       await this.emailService.sendConfirmationEmail(email, confirmationCode);
     } catch (e) {
-      await this.usersService.deleteById(toUserId(created));2
+      await this.commandBus.execute(new DeleteUserCommand(toUserId(created)));
       throw new BadRequestException({ errorsMessages: [{ message: 'Registration failed', field: 'email' }] });
     }
   }
 
   async confirmCode(code: string): Promise<void> {
-    const user = await this.usersService.findByConfirmationCode(code);
+    const user: UserDocument | null = await this.queryBus.execute(
+      new FindUserByConfirmationCodeQuery(code),
+    );
     const emailConf = user?.emailConfirmation;
     if (!user || !emailConf || emailConf.confirmationCode !== code) {
       throw new BadRequestException({ errorsMessages: [{ message: 'Incorrect confirmation code', field: 'code' }] });
@@ -60,14 +75,14 @@ export class AuthService {
     if (emailConf.expirationDate && new Date(emailConf.expirationDate) < new Date()) {
       throw new BadRequestException({ errorsMessages: [{ message: 'Confirmation code expired', field: 'code' }] });
     }
-    const updated = await this.usersService.confirmUser(toUserId(user));
+    const updated = await this.commandBus.execute(new ConfirmUserCommand(toUserId(user)));
     if (!updated) {
       throw new BadRequestException({ errorsMessages: [{ message: 'Update failed', field: 'code' }] });
     }
   }
 
   async resendEmail(email: string): Promise<void> {
-    const user = await this.usersService.findByEmail(email);
+    const user: UserDocument | null = await this.queryBus.execute(new FindUserByEmailQuery(email));
     if (!user) {
       throw new BadRequestException({ errorsMessages: [{ message: 'Wrong email', field: 'email' }] });
     }
@@ -77,12 +92,14 @@ export class AuthService {
     }
     const newCode = uuidv4();
     const newExpirationDate = add(new Date(), { hours: 3, minutes: 3 });
-    await this.usersService.updateConfirmationCode(toUserId(user), newCode, newExpirationDate);
+    await this.commandBus.execute(new UpdateConfirmationCodeCommand(toUserId(user), newCode, newExpirationDate));
     await this.emailService.sendConfirmationEmail(user.accountData.email, newCode);
   }
 
   async login(loginOrEmail: string, password: string): Promise<{ accessToken: string; refreshToken: string }> {
-    const user = await this.usersService.checkCredentials(loginOrEmail, password);
+    const user: UserDocument | null = await this.queryBus.execute(
+      new CheckCredentialsQuery(loginOrEmail, password),
+    );
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -96,7 +113,7 @@ export class AuthService {
   }
 
   async getMe(userId: string) {
-    const user = await this.usersService.findById(userId);
+    const user: UserDocument | null = await this.queryBus.execute(new FindUserByIdQuery(userId));
     if (!user) return null;
     return {
       email: user.accountData.email,
@@ -105,12 +122,12 @@ export class AuthService {
     };
   }
 
-  async  passwordRecovery(email: string): Promise<void> {
-    const user = await this.usersService.findByEmail(email);
+  async passwordRecovery(email: string): Promise<void> {
+    const user: UserDocument | null = await this.queryBus.execute(new FindUserByEmailQuery(email));
     if (user) {
       const recoveryCode = uuidv4();
       const expirationDate = add(new Date(), { hours: 24 });
-      await this.usersService.setRecoveryCode(toUserId(user), recoveryCode, expirationDate);
+      await this.commandBus.execute(new SetRecoveryCodeCommand(toUserId(user), recoveryCode, expirationDate));
       const link = `https://somesite.com/password-recovery?recoveryCode=${recoveryCode}`;
       await this.emailService.sendPasswordRecoveryEmail(email, link);
     }
@@ -118,14 +135,15 @@ export class AuthService {
   }
 
   async newPassword(recoveryCode: string, newPassword: string): Promise<void> {
-    const user = await this.usersService.findByRecoveryCode(recoveryCode);
+    const user: UserDocument | null = await this.queryBus.execute(
+      new FindUserByRecoveryCodeQuery(recoveryCode),
+    );
     if (!user) {
       throw new BadRequestException({ errorsMessages: [{ message: 'Recovery code is incorrect', field: 'recoveryCode' }] });
     }
     if (user.recoveryCodeExpiration && new Date(user.recoveryCodeExpiration) < new Date()) {
       throw new BadRequestException({ errorsMessages: [{ message: 'Recovery code expired', field: 'recoveryCode' }] });
     }
-    await this.usersService.setNewPassword(toUserId(user), newPassword);
+    await this.commandBus.execute(new SetNewPasswordCommand(toUserId(user), newPassword));
   }
-
 }

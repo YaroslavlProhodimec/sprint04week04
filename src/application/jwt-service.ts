@@ -40,6 +40,8 @@ export const jwtService = {
       if (
         error instanceof TokenExpiredError ||
         error instanceof JsonWebTokenError ||
+        // error instanceof JsonWebTokenError ||
+        // error instanceof JsonWebTokenError ||
         error instanceof NotBeforeError
         // error instanceof NotBeforeError/
       ) {

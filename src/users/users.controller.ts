@@ -11,14 +11,20 @@ import {
   NotFoundException,
   UseGuards,
 } from '@nestjs/common';
-import { UsersService } from './users.service';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { BasicAuthGuard } from '../auth/guards/basic-auth.guard';
 import { CreateUserDto } from './dto/create-user.dto';
+import { CreateUserCommand } from './commands';
+import { DeleteUserCommand } from './commands';
+import { GetAllUsersQuery } from './queries';
 
 @Controller('users')
 @UseGuards(BasicAuthGuard)
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
+  ) {}
 
   @Get()
   async getUsers(@Query() query: any) {
@@ -33,19 +39,19 @@ export class UsersController {
       pageSize: query.pageSize,
     };
 
-    return this.usersService.getAllUsers(sortData);
+    return this.queryBus.execute(new GetAllUsersQuery(sortData));
   }
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async createUser(@Body() dto: CreateUserDto) {
-    return this.usersService.createUser(dto.login, dto.email, dto.password);
+    return this.commandBus.execute(new CreateUserCommand(dto.login, dto.email, dto.password));
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteUser(@Param('id') id: string): Promise<void> {
-    const deleted = await this.usersService.deleteUser(id);
+    const deleted = await this.commandBus.execute(new DeleteUserCommand(id));
     if (!deleted) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }

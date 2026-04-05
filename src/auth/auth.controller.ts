@@ -61,6 +61,16 @@ export class AuthController {
     return { accessToken };
   }
 
+  @Post('logout')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async logout(@Req() req: Request) {
+    const refreshToken = req.cookies?.refreshToken;
+    if (!refreshToken) {
+      throw new UnauthorizedException('No refresh token');
+    }
+    await this.authService.logout(refreshToken);
+  }
+
   @Get('me')
   @UseGuards(JwtAuthGuard)
   async me(@UserId() userId: string) {

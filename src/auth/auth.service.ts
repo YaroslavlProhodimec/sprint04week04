@@ -22,7 +22,7 @@ import {
   FindUserByRecoveryCodeQuery,
   CheckCredentialsQuery,
 } from '../users/queries';
-import { CreateDeviceSessionCommand, UpdateDeviceSessionCommand } from '../device-sessions/commands';
+import { CreateDeviceSessionCommand, UpdateDeviceSessionCommand, DeleteDeviceSessionCommand } from '../device-sessions/commands';
 import { FindSessionByDeviceIdQuery } from '../device-sessions/queries';
 
 function toUserId(user: UserDocument): string {
@@ -173,6 +173,30 @@ export class AuthService {
       throw new BadRequestException({ errorsMessages: [{ message: 'Recovery code expired', field: 'recoveryCode' }] });
     }
     await this.commandBus.execute(new SetNewPasswordCommand(toUserId(user), newPassword));
+  }
+
+  async logout(refreshToken: string): Promise<void> {
+    const refreshSecret = process.env.REFRESH_TOKEN_SECRET || 'refresh-secret';
+    const payload = await jwtService.getJwtPayloadResult(refreshToken, refreshSecret);
+
+    if (!payload || !payload.userId || !payload.deviceId) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    const session: DeviceSessionDocument | null = await this.queryBus.execute(
+      new FindSessionByDeviceIdQuery(payload.deviceId),
+    );
+
+    if (!session) {
+      throw new UnauthorizedException('Session not found');
+    }
+
+    const tokenIssuedAt = new Date((payload.iat ?? 0) * 1000);
+    if (session.issuedAt.getTime() !== tokenIssuedAt.getTime()) {
+      throw new UnauthorizedException('Token has been revoked');
+    }
+
+    await this.commandBus.execute(new DeleteDeviceSessionCommand(payload.deviceId));
   }
 
   private async generateTokensAndCreateSession(

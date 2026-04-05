@@ -99,7 +99,7 @@ export class AuthService {
     await this.emailService.sendConfirmationEmail(user.accountData.email, newCode);
   }
 
-  async login(loginOrEmail: string, password: string): Promise<{ accessToken: string; refreshToken: string }> {
+  async login(loginOrEmail: string, password: string, ip: string, deviceName: string): Promise<{ accessToken: string; refreshToken: string }> {
     const user: UserDocument | null = await this.queryBus.execute(
       new CheckCredentialsQuery(loginOrEmail, password),
     );
@@ -110,7 +110,7 @@ export class AuthService {
     const userId = toUserId(user);
     const deviceId = uuidv4();
 
-    return this.generateTokensAndCreateSession(userId, deviceId);
+    return this.generateTokensAndCreateSession(userId, deviceId, ip, deviceName);
   }
 
   async refreshTokens(oldRefreshToken: string): Promise<{ accessToken: string; refreshToken: string }> {
@@ -202,6 +202,8 @@ export class AuthService {
   private async generateTokensAndCreateSession(
     userId: string,
     deviceId: string,
+    ip: string,
+    deviceName: string,
   ): Promise<{ accessToken: string; refreshToken: string }> {
     const accessSecret = process.env.ACCESS_TOKEN_SECRET || 'access-secret';
     const refreshSecret = process.env.REFRESH_TOKEN_SECRET || 'refresh-secret';
@@ -217,7 +219,7 @@ export class AuthService {
     const expirationDate = new Date((refreshPayload!.exp ?? 0) * 1000);
 
     await this.commandBus.execute(
-      new CreateDeviceSessionCommand(userId, deviceId, issuedAt, expirationDate),
+      new CreateDeviceSessionCommand(userId, deviceId, issuedAt, expirationDate, ip, deviceName),
     );
 
     return { accessToken, refreshToken };

@@ -1,4 +1,5 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Post, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { ThrottlerGuard } from '@nestjs/throttler';
 import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -14,28 +15,34 @@ import { UserId } from './decorators/user-id.decorator';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @UseGuards(ThrottlerGuard)
   @Post('registration')
   @HttpCode(HttpStatus.NO_CONTENT)
   async register(@Body() dto: RegisterDto) {
     await this.authService.register(dto.login, dto.email, dto.password);
   }
 
+  @UseGuards(ThrottlerGuard)
   @Post('registration-confirmation')
   @HttpCode(HttpStatus.NO_CONTENT)
   async confirmCode(@Body() dto: ConfirmCodeDto) {
     await this.authService.confirmCode(dto.code);
   }
 
+  @UseGuards(ThrottlerGuard)
   @Post('registration-email-resending')
   @HttpCode(HttpStatus.NO_CONTENT)
   async resendEmail(@Body() dto: ResendEmailDto) {
     await this.authService.resendEmail(dto.email);
   }
 
+  @UseGuards(ThrottlerGuard)
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  async login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
-    const { accessToken, refreshToken } = await this.authService.login(dto.loginOrEmail, dto.password);
+  async login(@Body() dto: LoginDto, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    const ip = req.ip || 'unknown';
+    const deviceName = req.headers['user-agent'] || 'unknown';
+    const { accessToken, refreshToken } = await this.authService.login(dto.loginOrEmail, dto.password, ip, deviceName);
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: true,
@@ -79,12 +86,14 @@ export class AuthController {
     return me;
   }
 
+  @UseGuards(ThrottlerGuard)
   @Post('password-recovery')
   @HttpCode(HttpStatus.NO_CONTENT)
   async passwordRecovery(@Body() dto: PasswordRecoveryDto) {
     await this.authService.passwordRecovery(dto.email);
   }
 
+  @UseGuards(ThrottlerGuard)
   @Post('new-password')
   @HttpCode(HttpStatus.NO_CONTENT)
   async newPassword(@Body() dto: NewPasswordDto) {

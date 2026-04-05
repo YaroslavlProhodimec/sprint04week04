@@ -12,6 +12,8 @@ export class CreateDeviceSessionHandler implements ICommandHandler<CreateDeviceS
       command.deviceId,
       command.issuedAt,
       command.expirationDate,
+      command.ip,
+      command.deviceName,
     );
   }
 }

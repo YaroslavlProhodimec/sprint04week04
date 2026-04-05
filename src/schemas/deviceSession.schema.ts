@@ -19,8 +19,15 @@ export class DeviceSession {
 
   @Prop({ required: true })
   lastActiveDate: Date;
+
+  @Prop({ default: 'unknown' })
+  ip: string;
+
+  @Prop({ default: 'unknown' })
+  deviceName: string;
 }
 
 export const DeviceSessionSchema = SchemaFactory.createForClass(DeviceSession);
 
 DeviceSessionSchema.index({ deviceId: 1 }, { unique: true });
+DeviceSessionSchema.index({ userId: 1 });

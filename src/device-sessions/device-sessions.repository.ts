@@ -14,6 +14,8 @@ export class DeviceSessionsRepository {
     deviceId: string,
     issuedAt: Date,
     expirationDate: Date,
+    ip: string,
+    deviceName: string,
   ): Promise<DeviceSessionDocument> {
     const session = new this.sessionModel({
       userId,
@@ -21,6 +23,8 @@ export class DeviceSessionsRepository {
       issuedAt,
       expirationDate,
       lastActiveDate: issuedAt,
+      ip,
+      deviceName,
     });
     return session.save();
   }
@@ -46,5 +50,13 @@ export class DeviceSessionsRepository {
   async deleteByDeviceId(deviceId: string): Promise<boolean> {
     const result = await this.sessionModel.deleteOne({ deviceId }).exec();
     return result.deletedCount > 0;
+  }
+
+  async findAllByUserId(userId: string): Promise<DeviceSessionDocument[]> {
+    return this.sessionModel.find({ userId }).exec();
+  }
+
+  async deleteAllByUserIdExceptDeviceId(userId: string, deviceId: string): Promise<void> {
+    await this.sessionModel.deleteMany({ userId, deviceId: { $ne: deviceId } }).exec();
   }
 }

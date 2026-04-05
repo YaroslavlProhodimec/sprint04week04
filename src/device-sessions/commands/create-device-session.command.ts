@@ -4,5 +4,7 @@ export class CreateDeviceSessionCommand {
     public readonly deviceId: string,
     public readonly issuedAt: Date,
     public readonly expirationDate: Date,
+    public readonly ip: string,
+    public readonly deviceName: string,
   ) {}
 }

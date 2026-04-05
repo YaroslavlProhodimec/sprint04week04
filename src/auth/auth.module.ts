@@ -5,10 +5,11 @@ import { BasicAuthGuard } from './guards/basic-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { OptionalJwtGuard } from './guards/optional-jwt.guard';
 import { UsersModule } from '../users/users.module';
+import { DeviceSessionsModule } from '../device-sessions/device-sessions.module';
 import { EmailModule } from '../common/email/email.module';
 
 @Module({
-  imports: [UsersModule, EmailModule],
+  imports: [UsersModule, DeviceSessionsModule, EmailModule],
   controllers: [AuthController],
   providers: [AuthService, BasicAuthGuard, JwtAuthGuard, OptionalJwtGuard],
   exports: [AuthService, BasicAuthGuard, JwtAuthGuard, OptionalJwtGuard],

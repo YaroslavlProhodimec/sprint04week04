@@ -8,6 +8,7 @@ import { User, UserDocument } from '../schemas/user.schema';
 import { PostLike, PostLikeDocument } from '../schemas/postLike.schema';
 import { Comment, CommentDocument } from '../schemas/comment.schema';
 import { CommentLike, CommentLikeDocument } from '../schemas/commentLike.schema';
+import { DeviceSession, DeviceSessionDocument } from '../schemas/deviceSession.schema';
 
 @Controller('testing')
 export class TestingController {
@@ -18,6 +19,7 @@ export class TestingController {
     @InjectModel(PostLike.name) private postLikeModel: Model<PostLikeDocument>,
     @InjectModel(Comment.name) private commentModel: Model<CommentDocument>,
     @InjectModel(CommentLike.name) private commentLikeModel: Model<CommentLikeDocument>,
+    @InjectModel(DeviceSession.name) private deviceSessionModel: Model<DeviceSessionDocument>,
   ) {}
 
   @Delete('all-data')
@@ -30,6 +32,7 @@ export class TestingController {
       this.postLikeModel.deleteMany({}),
       this.commentModel.deleteMany({}),
       this.commentLikeModel.deleteMany({}),
+      this.deviceSessionModel.deleteMany({}),
     ]);
   }
 }

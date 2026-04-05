@@ -5,6 +5,7 @@ import { add } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 import { EmailService } from '../common/email/email.service';
 import type { UserDocument } from '../schemas/user.schema';
+import type { DeviceSessionDocument } from '../schemas/deviceSession.schema';
 import {
   CreateUserForRegistrationCommand,
   DeleteUserCommand,
@@ -21,6 +22,8 @@ import {
   FindUserByRecoveryCodeQuery,
   CheckCredentialsQuery,
 } from '../users/queries';
+import { CreateDeviceSessionCommand, UpdateDeviceSessionCommand } from '../device-sessions/commands';
+import { FindSessionByDeviceIdQuery } from '../device-sessions/queries';
 
 function toUserId(user: UserDocument): string {
   return String((user as any)._id);
@@ -103,13 +106,38 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
-    const accessSecret = process.env.ACCESS_TOKEN_SECRET || 'access-secret';
+
+    const userId = toUserId(user);
+    const deviceId = uuidv4();
+
+    return this.generateTokensAndCreateSession(userId, deviceId);
+  }
+
+  async refreshTokens(oldRefreshToken: string): Promise<{ accessToken: string; refreshToken: string }> {
     const refreshSecret = process.env.REFRESH_TOKEN_SECRET || 'refresh-secret';
-    const [accessToken, refreshToken] = await Promise.all([
-      jwtService.createJWT({ userId: toUserId(user) }, accessSecret, 300), // 5 мин
-      jwtService.createJWT({ userId: toUserId(user) }, refreshSecret, 604800), // 7 дней
-    ]);
-    return { accessToken, refreshToken };
+    const payload = await jwtService.getJwtPayloadResult(oldRefreshToken, refreshSecret);
+
+    if (!payload || !payload.userId || !payload.deviceId) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    // Проверяем сессию в БД
+    const session: DeviceSessionDocument | null = await this.queryBus.execute(
+      new FindSessionByDeviceIdQuery(payload.deviceId),
+    );
+
+    if (!session) {
+      throw new UnauthorizedException('Session not found');
+    }
+
+    // Проверяем что iat токена совпадает с issuedAt сессии (ревокация)
+    const tokenIssuedAt = new Date((payload.iat ?? 0) * 1000);
+    if (session.issuedAt.getTime() !== tokenIssuedAt.getTime()) {
+      throw new UnauthorizedException('Token has been revoked');
+    }
+
+    // Генерируем новую пару токенов и обновляем сессию
+    return this.generateTokensAndUpdateSession(payload.userId, payload.deviceId);
   }
 
   async getMe(userId: string) {
@@ -145,5 +173,52 @@ export class AuthService {
       throw new BadRequestException({ errorsMessages: [{ message: 'Recovery code expired', field: 'recoveryCode' }] });
     }
     await this.commandBus.execute(new SetNewPasswordCommand(toUserId(user), newPassword));
+  }
+
+  private async generateTokensAndCreateSession(
+    userId: string,
+    deviceId: string,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
+    const accessSecret = process.env.ACCESS_TOKEN_SECRET || 'access-secret';
+    const refreshSecret = process.env.REFRESH_TOKEN_SECRET || 'refresh-secret';
+
+    const [accessToken, refreshToken] = await Promise.all([
+      jwtService.createJWT({ userId }, accessSecret, 10),         // 10 сек
+      jwtService.createJWT({ userId, deviceId }, refreshSecret, 20), // 20 сек
+    ]);
+
+    // Достаём iat из нового refresh токена
+    const refreshPayload = await jwtService.getJwtPayloadResult(refreshToken, refreshSecret);
+    const issuedAt = new Date((refreshPayload!.iat ?? 0) * 1000);
+    const expirationDate = new Date((refreshPayload!.exp ?? 0) * 1000);
+
+    await this.commandBus.execute(
+      new CreateDeviceSessionCommand(userId, deviceId, issuedAt, expirationDate),
+    );
+
+    return { accessToken, refreshToken };
+  }
+
+  private async generateTokensAndUpdateSession(
+    userId: string,
+    deviceId: string,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
+    const accessSecret = process.env.ACCESS_TOKEN_SECRET || 'access-secret';
+    const refreshSecret = process.env.REFRESH_TOKEN_SECRET || 'refresh-secret';
+
+    const [accessToken, refreshToken] = await Promise.all([
+      jwtService.createJWT({ userId }, accessSecret, 10),         // 10 сек
+      jwtService.createJWT({ userId, deviceId }, refreshSecret, 20), // 20 сек
+    ]);
+
+    const refreshPayload = await jwtService.getJwtPayloadResult(refreshToken, refreshSecret);
+    const issuedAt = new Date((refreshPayload!.iat ?? 0) * 1000);
+    const expirationDate = new Date((refreshPayload!.exp ?? 0) * 1000);
+
+    await this.commandBus.execute(
+      new UpdateDeviceSessionCommand(deviceId, issuedAt, expirationDate),
+    );
+
+    return { accessToken, refreshToken };
   }
 }

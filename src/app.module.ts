@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { PostsModule } from './posts/posts.module';
 import { CommentsModule } from './comments/comments.module';
 import { TestingModule } from './testing/testing.module';
+import { DeviceSessionsModule } from './device-sessions/device-sessions.module';
 import { setBlogsRepository } from './repositories/blog-repository';
 import { BlogsRepository } from './blogs/blogs.repository';
 
@@ -24,6 +25,7 @@ import { BlogsRepository } from './blogs/blogs.repository';
     AuthModule,
     PostsModule,
     CommentsModule,
+    DeviceSessionsModule,
     TestingModule,
   ],
 })
